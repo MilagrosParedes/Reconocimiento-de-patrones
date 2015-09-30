@@ -50,7 +50,7 @@ public class Principal extends AppCompatActivity {
         Lienzo fondo = new Lienzo(this);
         layout1.addView(fondo);
 
-        objeto = (NameAlert)getIntent().getExtras().getSerializable("parametro");
+
 
 
         mydb = new TRegistros(this);
@@ -62,15 +62,13 @@ public class Principal extends AppCompatActivity {
                                          // Valores
             String accion = "";
             String[] ruta = new String [1000];
-            String usuario = objeto.toString();
+            String usuario = getIntent().getStringExtra("parametro");
 
             float x, y;
 
             int intento = 1;
-            //int usuario = objeto;
             int patron = 1; //CUAL PATRON ES!?
             int posicion = 0;
-            boolean registrado = false; // Ya ingreso el nombre
 
             boolean valido = false;
 
@@ -94,8 +92,6 @@ public class Principal extends AppCompatActivity {
             }
 
             protected void onDraw (Canvas canvas){
-
-                Toast.makeText(getBaseContext(),"NOMBRE: "+usuario, Toast.LENGTH_SHORT).show();
 
                 canvas.drawColor(Color.BLACK);
                 pincel1 = new Paint();
@@ -217,8 +213,6 @@ public class Principal extends AppCompatActivity {
                         }else Toast.makeText(getBaseContext(),"Trazado Inválido", Toast.LENGTH_SHORT).show();
 
 
-
-                    Toast.makeText(getBaseContext(),"Size" + array_time.size(), Toast.LENGTH_SHORT).show();
                     array_time.clear();
 
                     canvas.drawColor(Color.BLACK);
@@ -280,7 +274,7 @@ public class Principal extends AppCompatActivity {
                     if(valido){
                         Log.d("INICIO VALIDO", String.valueOf(x)+";"+String.valueOf(y));
                         ruta[0] = String.valueOf(x) + ";" + String.valueOf(y);
-                    }
+                    }else Toast.makeText(getBaseContext(),"Pto. inicial inválido", Toast.LENGTH_SHORT).show();
 
 
                 }
