@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Canvas;
@@ -38,6 +39,7 @@ import java.util.Date;
 public class Principal extends AppCompatActivity {
 
     private TRegistros mydb;
+    NameAlert objeto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -48,6 +50,9 @@ public class Principal extends AppCompatActivity {
         Lienzo fondo = new Lienzo(this);
         layout1.addView(fondo);
 
+        objeto = (NameAlert)getIntent().getExtras().getSerializable("parametro");
+
+
         mydb = new TRegistros(this);
 
     }
@@ -57,11 +62,12 @@ public class Principal extends AppCompatActivity {
                                          // Valores
             String accion = "";
             String[] ruta = new String [1000];
+            String usuario = objeto.toString();
 
             float x, y;
 
             int intento = 1;
-            int usuario = 1;
+            //int usuario = objeto;
             int patron = 1; //CUAL PATRON ES!?
             int posicion = 0;
             boolean registrado = false; // Ya ingreso el nombre
@@ -89,6 +95,7 @@ public class Principal extends AppCompatActivity {
 
             protected void onDraw (Canvas canvas){
 
+                Toast.makeText(getBaseContext(),"NOMBRE: "+usuario, Toast.LENGTH_SHORT).show();
 
                 canvas.drawColor(Color.BLACK);
                 pincel1 = new Paint();
@@ -202,7 +209,8 @@ public class Principal extends AppCompatActivity {
                             if(patron > 3)
                             {
                                 patron = 0;
-                                usuario ++;
+                                Intent intent = new Intent(Principal.this, NameAlert.class);
+                                startActivity(intent);
                             }
 
 
@@ -292,7 +300,7 @@ public class Principal extends AppCompatActivity {
             }
 
 
-            public void RegistrarEnBD(String recorrido[], ArrayList<Long> array_time, int usuario, int patron, int intento )
+            public void RegistrarEnBD(String recorrido[], ArrayList<Long> array_time, String usuario, int patron, int intento )
             {
                 long coord_time = 0;
                 String [] aux = new String[2];
