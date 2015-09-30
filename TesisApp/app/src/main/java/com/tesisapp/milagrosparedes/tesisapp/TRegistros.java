@@ -25,7 +25,7 @@ public class TRegistros extends SQLiteOpenHelper {
 
     public static final String CREATE_DB_TABLE = "CREATE TABLE IF NOT EXISTS "+ TABLE_NAME +"("+
             FIELD_ID + " integer primary key autoincrement,"+
-            FIELD_USUARIO + " integer not null,"+
+            FIELD_USUARIO + " text,"+
             FIELD_PATRON + " integer not null,"+
             FIELD_INTENTO + " integer not null,"+
             FIELD_X + " real not null,"+
@@ -55,7 +55,7 @@ public class TRegistros extends SQLiteOpenHelper {
         Log.d("ACTUALIZACION DE BD", "ACTUALIZANDO BD");
     }
 
-    public boolean insertRegistro (int usuario, int patron, int intento, float coord_time, long total_time, int puntos, float x, float y)
+    public boolean insertRegistro (String usuario, int patron, int intento, float coord_time, long total_time, int puntos, float x, float y)
     {
 
         SQLiteDatabase db = this.getWritableDatabase();
