@@ -2,6 +2,7 @@ package com.tesisapp.milagrosparedes.tesisapp;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -13,7 +14,7 @@ public class TRegistros extends SQLiteOpenHelper {
 
     public static final  String DB_NAME ="Registros.db";
     public static final String TABLE_NAME = "Registros";
-    public static final String FIELD_ID = "_id";
+    //public static final String FIELD_ID = "_id";
     public static final String FIELD_USUARIO = "usuario";
     public static final String FIELD_PATRON = "patron";
     public static final String FIELD_INTENTO = "intento";
@@ -24,15 +25,16 @@ public class TRegistros extends SQLiteOpenHelper {
     public static final String FIELD_PUNTOS = "cant_ptos";            // Número de puntos que se tocan en el trazado
 
     public static final String CREATE_DB_TABLE = "CREATE TABLE IF NOT EXISTS "+ TABLE_NAME +"("+
-            FIELD_ID + " integer primary key autoincrement,"+
-            FIELD_USUARIO + " text,"+
+            //FIELD_ID + " integer primary key autoincrement,"+
+
             FIELD_PATRON + " integer not null,"+
             FIELD_INTENTO + " integer not null,"+
             FIELD_X + " real not null,"+
             FIELD_Y + " real not null,"+
             FIELD_PUNTOS + " integer not null," +
             FIELD_COORD_TIME + " real,"+
-            FIELD_TOTAL_TIME + " long"
+            FIELD_TOTAL_TIME + " long,"+
+            FIELD_USUARIO + " text"
             + ")";
 
 
@@ -55,13 +57,13 @@ public class TRegistros extends SQLiteOpenHelper {
         Log.d("ACTUALIZACION DE BD", "ACTUALIZANDO BD");
     }
 
+    // FUNCION ORIGINAL: (String usuario, int patron, int intento, float coord_time, long total_time, int puntos, float x, float y)
     public boolean insertRegistro (String usuario, int patron, int intento, float coord_time, long total_time, int puntos, float x, float y)
     {
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
-        contentValues.put(FIELD_USUARIO,usuario);
         contentValues.put(FIELD_PATRON,patron);
         contentValues.put(FIELD_INTENTO,intento);
         contentValues.put(FIELD_X,x);
@@ -69,23 +71,28 @@ public class TRegistros extends SQLiteOpenHelper {
         contentValues.put(FIELD_PUNTOS,puntos);
         contentValues.put(FIELD_COORD_TIME,coord_time);
         contentValues.put(FIELD_TOTAL_TIME,total_time);
+        contentValues.put(FIELD_USUARIO, usuario);
         db.insert(TABLE_NAME, null, contentValues);
-        Log.d("INSERTADO!!","REGISTRO EXITOSO");
+        //Log.d("INSERTADO!!","REGISTRO EXITOSO");
 
         return true;
     }
 
-/*
 
 
----------------------------------- OBTENER UN DATO EN ESPECÍFICO ------------------
 
-    public Cursor getData(int id){
+//---------------------------------- OBTENER UN DATO EN ESPECÍFICO ------------------
+
+    public Cursor getData(String consulta){
+
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from contacts where id="+id+"", null );
+        Cursor res =  db.rawQuery(consulta, null );
+
         return res;
     }
 
+
+/*
 -------------------------------- OBTENER NÚMERO DE REGISTROS -------------------------
 
     public int numberOfRows(){

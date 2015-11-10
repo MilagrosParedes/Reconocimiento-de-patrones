@@ -3,6 +3,7 @@ package com.tesisapp.milagrosparedes.tesisapp;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.admin.DeviceAdminReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -32,9 +33,11 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Random;
 
 public class Principal extends AppCompatActivity {
 
@@ -62,8 +65,11 @@ public class Principal extends AppCompatActivity {
                                          // Valores
             String accion = "";
             String[] ruta = new String [1000];
+            String[] ptos_selec = new String[100];
             String usuario = getIntent().getStringExtra("parametro");
-
+            String consulta = "";
+            String DatosAux[];
+            String Datos[];
             float x, y;
 
             int intento = 1;
@@ -76,10 +82,11 @@ public class Principal extends AppCompatActivity {
             long total_time;
                                         //Objetos
             Patron figura = new Patron();
-
+            ArchivoARFF archivo;
                                         //Figura
             Rect rect;
-            Paint p_rect;
+            Paint circulo;
+
             Path path = new Path();
 
             Paint pincel1;
@@ -93,6 +100,17 @@ public class Principal extends AppCompatActivity {
 
             protected void onDraw (Canvas canvas){
 
+                for (int i = 1; i < 4; i++) {
+                   for (int j = 1; j < 5; j++)
+                    {
+                        consulta = "SELECT * FROM Registros WHERE patron = "+ i+" and intento = "+j;
+                        Cursor c = mydb.getData(consulta);
+
+                        ObtenerRegistros(c,i,j);
+                    }
+                 }
+
+
                 canvas.drawColor(Color.BLACK);
                 pincel1 = new Paint();
                 pincel1.setAntiAlias(true);
@@ -100,6 +118,12 @@ public class Principal extends AppCompatActivity {
                 pincel1.setColor(Color.GRAY);
                 pincel1.setStyle(Paint.Style.STROKE);
                 pincel1.setStrokeWidth(5);
+
+                circulo = new Paint();
+                circulo.setAntiAlias(true);
+                circulo.setColor(Color.GREEN);
+                circulo.setStyle(Paint.Style.STROKE);
+                circulo.setStrokeWidth(1);
 
                 pincelText = new Paint();
                 pincelText.setAntiAlias(true);
@@ -111,7 +135,6 @@ public class Principal extends AppCompatActivity {
                 canvas.drawText("Patrón: " + String.valueOf(patron), 50, 50, pincelText);
                 canvas.drawText("Intento: " + String.valueOf(intento), 50, 70, pincelText);
                 figura = new Patron();
-
 
 
 
@@ -163,8 +186,6 @@ public class Principal extends AppCompatActivity {
                     float x_ant = 0;
                     float y_ant = 0;
 
-                   // array_time.add(System.currentTimeMillis());
-
                     coord = ruta[posicion].split(";");
                     x_ant = Float.valueOf(coord[0]);
                     y_ant = Float.valueOf(coord[1]);
@@ -180,12 +201,13 @@ public class Principal extends AppCompatActivity {
                     canvas.drawPath(path, paint);
                 }
                 if(accion == "up")
-                {
+                {//int band = 0;
 
                         String sirve =  figura.ValidarFigura(ruta,intento,patron);
                         Log.d("SIRVE", sirve);
                         if (sirve.compareTo("Correcto")== 0)
                         {
+
                             Toast.makeText(getBaseContext(),"Trazado Válido", Toast.LENGTH_SHORT).show();
                             array_time.add(System.currentTimeMillis());
                             total_time = array_time.get(array_time.size()-1) - array_time.get(0);
@@ -193,10 +215,10 @@ public class Principal extends AppCompatActivity {
                             Log.d("TIEMPO TOTAL " + intento, String.valueOf(total_time));
 
                             RegistrarEnBD(ruta, array_time, usuario, patron, intento);
-                            BD_backup();
+
                             intento++;
 
-                            if (intento > 2)
+                            if (intento > 4)
                             {
                                 patron ++;
                                 intento = 1;
@@ -217,7 +239,6 @@ public class Principal extends AppCompatActivity {
 
                     canvas.drawColor(Color.BLACK);
                     path.reset();
-
 
                     if(patron == 1)
                     {
@@ -245,7 +266,6 @@ public class Principal extends AppCompatActivity {
                         canvas.drawLine(Math.round(figura.getX1_P3()), Math.round(figura.getY2_P3()), Math.round(figura.getX2_P3()), Math.round(figura.getY2_P3()), pincel1);
 
                     }
-
 
                     posicion = 0;
 
@@ -293,6 +313,7 @@ public class Principal extends AppCompatActivity {
                 return true;
             }
 
+            // Registrar Datos en la BD
 
             public void RegistrarEnBD(String recorrido[], ArrayList<Long> array_time, String usuario, int patron, int intento )
             {
@@ -313,14 +334,245 @@ public class Principal extends AppCompatActivity {
                     x = Float.valueOf(aux[0]);
                     y = Float.valueOf(aux[1]);
                     mydb.insertRegistro(usuario,patron,intento,ct,total_time,puntos,x,y);
-     Log.d("LO DE LA BD: ",String.valueOf(usuario)+";"+String.valueOf(patron)+";"+String.valueOf(intento)+";"+String.valueOf(ct)+";"+String.valueOf(total_time)+";"+String.valueOf(array_time.size())+";"+String.valueOf(x)+";"+String.valueOf(y));
+
+                }
+
+
+            }
+
+            // Dividir y organizar los datos
+
+            public void ObtenerRegistros(Cursor data, int patron, int intento)
+            {
+                Datos = new String[data.getCount()];
+                DatosAux = new String[data.getCount()];
+                ArrayList<String> usuarios = new ArrayList<String>();
+
+                int posiciones[] = new int[100];
+                int posicionesOrd[] = new int [100];
+                int patronAnt = 0;
+
+
+                int i = 0;
+                boolean band = true; // Manejar ambos vectores
+
+                VaciarVector(Datos);
+                VaciarVector(DatosAux);
+
+                if (data.moveToFirst()) {
+                    do {
+                        if(band)
+                        {
+                            if(i >0)
+                            {
+                                if(Datos[i-1].contains(data.getString(7)))
+                                {
+                                    Datos[i] = data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
+                                    usuarios.add(data.getString(7));
+                                    i++;
+                                }else
+                                {
+                                    i = 0;
+                                    DatosAux[0]= data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
+                                    i++;
+                                    band = false;
+
+                                }
+
+
+                            }else
+                            {
+                                Datos[i] = data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
+                                usuarios.add(data.getString(7));
+                                i++;
+                            }
+
+                        }else
+                        {
+                            DatosAux[i]= data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
+                            usuarios.add(data.getString(7));
+                            i++;
+                        }
+                    } while(data.moveToNext());
+
+                }
+
+
+                ArrayList<String> ArrayNombres = SimplificarArray(usuarios);
+                int tam = ArrayNombres.size();
+
+                SeleccionarPuntos(Datos, patron, intento, ArrayNombres);
+                VaciarVector(Datos);
+
+                for (int j = 0; j <= tam; j++) {
+                    if(Datos[0].compareTo("null")!=0)
+                    {
+                        SeleccionarPuntos(Datos,patron, intento,ArrayNombres);
+                        VaciarVector(Datos);
+                    }else
+                        RellenarVector(DatosAux);
                 }
 
 
             }
 
 
-        // CLASE PARA EXPORTAR LA BASE DE DATOS
+            //Seleccionar los puntos finales
+
+
+            public void SeleccionarPuntos(String[] Datos, int patron, int intento, ArrayList Nombres)
+            {
+
+                String Puntos[] = new String[100];
+                int cant_registros = 0;
+
+
+                for (int j = 0; j < Puntos.length; j++)
+                {
+                    Puntos[j] = "0";
+                }
+
+                for (int recorrido = 0; recorrido < Datos.length; recorrido++)
+                {
+                    if(Datos[recorrido].compareTo("null") != 0)
+                   cant_registros++;
+                }
+
+
+
+                float tamaño = (float)cant_registros/(float)100;
+                Log.d("TAMAÑO", String.valueOf(tamaño));
+                int n = entero(tamaño);
+
+
+                if(n == 0)          // Es flotante
+                {
+                    if(cant_registros <= 100)
+                    {Log.d("DATOS","MENOR A 100");
+                        for (int m = 0; m < cant_registros; m++) {
+                            Puntos[m] = Datos[m];
+                        }
+                    }
+                    else
+                    {
+                        if(cant_registros > 100 && cant_registros <= 200)
+                        {Log.d("DATOS","MENOR A 200");
+                            for (int idx = 0; idx < Puntos.length; idx++) {
+                                if((idx * 2) < cant_registros)
+                                    Puntos[idx] = Datos[idx*2];
+                            }
+                        }else{Log.d("DATOS","MAS DE 200");
+                            for (int idx = 0; idx < Puntos.length; idx++) {
+                                if((idx * 3) < cant_registros)
+                                {
+                                    Puntos[idx] = Datos[idx*3];
+                                }
+
+                            }}
+
+                    }
+
+                }else
+                {
+                    for (int px = 0; px < 100; px++) {
+                        Puntos[px] = Datos[px * (int)tamaño];
+                    }
+                }
+                for (int ii = 0; ii < Puntos.length; ii++) {
+                    Log.d("PTOS SELECCIONADOS",Puntos[ii].toString());
+                }
+
+                archivo = new ArchivoARFF(Puntos,patron,intento, Nombres);
+
+            }
+
+
+            // SIMPLIFICAR ARRAY_LIST
+
+            public ArrayList SimplificarArray(ArrayList arreglo)
+            {
+                int tamaño = 0;
+                ArrayList<String> ArrayFinal = new ArrayList<String>();
+                for(int i=0;i<arreglo.size();i++){
+                    for(int j=0;j<arreglo.size()-1;j++){
+                        if(i!=j){
+                            if(arreglo.get(i).toString().compareTo(arreglo.get(j).toString()) == 0 || arreglo.get(i).toString().compareTo("null")==0){
+                                arreglo.set(i,"null");
+                            }
+                        }
+                    }
+                }
+
+
+                for (int i = 0; i < arreglo.size(); i++) {
+                    if (arreglo.get(i).toString() != "null")
+                        ArrayFinal.add(arreglo.get(i).toString());
+
+                }
+
+
+
+                return ArrayFinal;
+            }
+
+            // ES ENTERO O FLOTANTE
+
+            public int entero(double x) {
+                if (x % 1 == 0) {
+                    return 1;       // es entero
+                } else {
+                    return 0;       //es flotante
+                }
+            }
+
+            // VACIAR VECTOR STRING
+
+            public void VaciarVector(String[] Datos)
+            {
+                for (int i = 0; i < Datos.length; i++) {
+                    Datos[i] = "null";
+                }
+
+                Log.d("VECTOR VACIADO","VECTOR VACIADO");
+            }
+
+
+            // RELLENAR VECTOR DE DATOS A ANALIZAR
+
+            public void RellenarVector(String[] DatosAux)
+            {
+
+                int pos = 0;
+                boolean ocupado = false;
+                String nombre = " ";
+
+                //---- Identificar el nombre
+
+                for (int recorrido = 0; recorrido < DatosAux.length; recorrido++) {
+                    if(DatosAux[recorrido]!= null && !ocupado)
+                    {
+                        String[] cadena = DatosAux[recorrido].split(";");
+                        nombre = cadena[5];
+                        ocupado = true;
+                    }
+                }
+
+
+                for (int i = 0; i < DatosAux.length; i++)
+                {
+                   if (DatosAux[i]!= null && DatosAux[i].contains(nombre))
+                        {
+                            Datos[pos] = DatosAux[i];
+                            DatosAux[i] = null;
+                            pos++;
+
+                        }
+                }
+
+            }
+
+
+         //CLASE PARA EXPORTAR LA BASE DE DATOS
 
 
 

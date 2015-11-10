@@ -1,8 +1,11 @@
 package com.tesisapp.milagrosparedes.tesisapp;
 
+import android.database.Cursor;
 import android.util.Log;
 
+import java.nio.charset.MalformedInputException;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by Milagros Paredes on 09/09/2015.
@@ -46,8 +49,6 @@ public class Patron {
         Y1_P3 = 400;
         Y2_P3 = 700;
 
-
-
         direccion_sig = "null";
         pto_salida_sig = "";
 
@@ -89,7 +90,7 @@ public class Patron {
         String estado = "Incorrecto";
         String aux[] = ruta;
         String coord[] = new String[2];
-        String puntos[] = new String[100];
+        String puntos[] = new String[1000];
         float xx,yy;
         int pos = 0;
 
@@ -409,9 +410,6 @@ return valido;
         }
         return vector_final;
     }
-
-
-
 
     public float getX1_P1() { return X1_P1; }
 

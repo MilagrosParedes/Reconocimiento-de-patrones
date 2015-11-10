@@ -13,17 +13,18 @@
         <activity
             android:name=".Principal"
             android:label="@string/app_name" >
-
-        </activity>
-        <activity
-            android:name=".NameAlert"
-            android:label="@string/title_activity_name_alert" >
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".NameAlert"
+            android:label="@string/title_activity_name_alert" >
+
+
 
         </activity>
     </application>
