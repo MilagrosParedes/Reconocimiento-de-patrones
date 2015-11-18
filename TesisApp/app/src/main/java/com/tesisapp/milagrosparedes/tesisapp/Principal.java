@@ -76,6 +76,7 @@ public class Principal extends AppCompatActivity {
             int patron = 1; //CUAL PATRON ES!?
             int posicion = 0;
 
+
             boolean valido = false;
 
             ArrayList<Long> array_time = new ArrayList<Long>();
@@ -99,17 +100,6 @@ public class Principal extends AppCompatActivity {
             }
 
             protected void onDraw (Canvas canvas){
-
-                for (int i = 1; i < 4; i++) {
-                   for (int j = 1; j < 5; j++)
-                    {
-                        consulta = "SELECT * FROM Registros WHERE patron = "+ i+" and intento = "+j;
-                        Cursor c = mydb.getData(consulta);
-
-                        ObtenerRegistros(c,i,j);
-                    }
-                 }
-
 
                 canvas.drawColor(Color.BLACK);
                 pincel1 = new Paint();
@@ -218,17 +208,29 @@ public class Principal extends AppCompatActivity {
 
                             intento++;
 
-                            if (intento > 4)
+                            if (intento > 11)
                             {
                                 patron ++;
                                 intento = 1;
                             }
 
-                            if(patron > 3)
-                            {
+                            if(patron > 3) {
+
+                                    for (int i = 1; i < 4; i++) {
+                                        for (int j = 1; j < 12; j++) {
+                                            Log.d("CONSULTA","Patron "+i + ", intento "+j);
+                                            String consulta2 = "SELECT * FROM Registros WHERE patron ="+ i +" and intento ="+ j + " and usuario ='"+usuario +"'";
+                                            Cursor c = mydb.getData(consulta2);
+                                            ObtenerRegistros(c,i,j);
+                                        }
+
+                                    }
+
                                 patron = 0;
                                 Intent intent = new Intent(Principal.this, NameAlert.class);
                                 startActivity(intent);
+
+
                             }
 
 
@@ -345,74 +347,38 @@ public class Principal extends AppCompatActivity {
             public void ObtenerRegistros(Cursor data, int patron, int intento)
             {
                 Datos = new String[data.getCount()];
-                DatosAux = new String[data.getCount()];
                 ArrayList<String> usuarios = new ArrayList<String>();
-
-                int posiciones[] = new int[100];
-                int posicionesOrd[] = new int [100];
-                int patronAnt = 0;
-
-
                 int i = 0;
-                boolean band = true; // Manejar ambos vectores
+
 
                 VaciarVector(Datos);
-                VaciarVector(DatosAux);
 
                 if (data.moveToFirst()) {
                     do {
-                        if(band)
-                        {
-                            if(i >0)
-                            {
-                                if(Datos[i-1].contains(data.getString(7)))
-                                {
-                                    Datos[i] = data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
-                                    usuarios.add(data.getString(7));
-                                    i++;
-                                }else
-                                {
-                                    i = 0;
-                                    DatosAux[0]= data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
-                                    i++;
-                                    band = false;
 
-                                }
+                        Datos[i] = data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
+                        i++;
 
-
-                            }else
-                            {
-                                Datos[i] = data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
-                                usuarios.add(data.getString(7));
-                                i++;
-                            }
-
-                        }else
-                        {
-                            DatosAux[i]= data.getString(2)+";"+data.getString(3)+";"+data.getString(5)+";"+data.getString(4)+";"+data.getString(6)+";"+data.getString(7);
-                            usuarios.add(data.getString(7));
-                            i++;
-                        }
                     } while(data.moveToNext());
 
                 }
 
+                ArrayList<String> ArrayNombres = new ArrayList<>();
 
-                ArrayList<String> ArrayNombres = SimplificarArray(usuarios);
-                int tam = ArrayNombres.size();
+                String consulta1 = "SELECT DISTINCT usuario FROM Registros";
+                Cursor c = mydb.getData(consulta1);
+
+                if(c.moveToFirst())
+                {
+                    do
+                    {
+                        ArrayNombres.add(c.getString(0));
+                    }while(c.moveToNext());
+                }
+
 
                 SeleccionarPuntos(Datos, patron, intento, ArrayNombres);
                 VaciarVector(Datos);
-
-                for (int j = 0; j <= tam; j++) {
-                    if(Datos[0].compareTo("null")!=0)
-                    {
-                        SeleccionarPuntos(Datos,patron, intento,ArrayNombres);
-                        VaciarVector(Datos);
-                    }else
-                        RellenarVector(DatosAux);
-                }
-
 
             }
 
@@ -420,7 +386,7 @@ public class Principal extends AppCompatActivity {
             //Seleccionar los puntos finales
 
 
-            public void SeleccionarPuntos(String[] Datos, int patron, int intento, ArrayList Nombres)
+            public void SeleccionarPuntos(String[] Datos, int patron, int intento, ArrayList ArrayNombres)
             {
 
                 String Puntos[] = new String[100];
@@ -482,37 +448,8 @@ public class Principal extends AppCompatActivity {
                     Log.d("PTOS SELECCIONADOS",Puntos[ii].toString());
                 }
 
-                archivo = new ArchivoARFF(Puntos,patron,intento, Nombres);
+                archivo = new ArchivoARFF(Puntos,patron,intento, ArrayNombres);
 
-            }
-
-
-            // SIMPLIFICAR ARRAY_LIST
-
-            public ArrayList SimplificarArray(ArrayList arreglo)
-            {
-                int tamaño = 0;
-                ArrayList<String> ArrayFinal = new ArrayList<String>();
-                for(int i=0;i<arreglo.size();i++){
-                    for(int j=0;j<arreglo.size()-1;j++){
-                        if(i!=j){
-                            if(arreglo.get(i).toString().compareTo(arreglo.get(j).toString()) == 0 || arreglo.get(i).toString().compareTo("null")==0){
-                                arreglo.set(i,"null");
-                            }
-                        }
-                    }
-                }
-
-
-                for (int i = 0; i < arreglo.size(); i++) {
-                    if (arreglo.get(i).toString() != "null")
-                        ArrayFinal.add(arreglo.get(i).toString());
-
-                }
-
-
-
-                return ArrayFinal;
             }
 
             // ES ENTERO O FLOTANTE
@@ -536,40 +473,6 @@ public class Principal extends AppCompatActivity {
                 Log.d("VECTOR VACIADO","VECTOR VACIADO");
             }
 
-
-            // RELLENAR VECTOR DE DATOS A ANALIZAR
-
-            public void RellenarVector(String[] DatosAux)
-            {
-
-                int pos = 0;
-                boolean ocupado = false;
-                String nombre = " ";
-
-                //---- Identificar el nombre
-
-                for (int recorrido = 0; recorrido < DatosAux.length; recorrido++) {
-                    if(DatosAux[recorrido]!= null && !ocupado)
-                    {
-                        String[] cadena = DatosAux[recorrido].split(";");
-                        nombre = cadena[5];
-                        ocupado = true;
-                    }
-                }
-
-
-                for (int i = 0; i < DatosAux.length; i++)
-                {
-                   if (DatosAux[i]!= null && DatosAux[i].contains(nombre))
-                        {
-                            Datos[pos] = DatosAux[i];
-                            DatosAux[i] = null;
-                            pos++;
-
-                        }
-                }
-
-            }
 
 
          //CLASE PARA EXPORTAR LA BASE DE DATOS

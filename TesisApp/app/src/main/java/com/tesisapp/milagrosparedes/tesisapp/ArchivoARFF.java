@@ -3,35 +3,38 @@ package com.tesisapp.milagrosparedes.tesisapp;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by Milagros Paredes on 05/11/2015.
  */
 public class ArchivoARFF {
-    public ArchivoARFF(String[] Data, int patron, int intento, ArrayList Nombres)
+    public ArchivoARFF(String[] Data, int patron, int intento, ArrayList ArrayNombres)
     {
-
+        Log.d("ARCHIVO","ENTRA AL ARCHIVO");
         String filename = " ";
         String titulo = " ";
 
         if(intento == 1)
         {
             filename = "EntrenamientoP"+patron+".arff";
-            titulo = "EntrenamientoP"+patron;
+            titulo = "EntrenamientoP"+String.valueOf(patron);
         }
 
         else
         {
             filename = "RegistrosP"+patron+".arff";
-            titulo = "RegistrosP"+patron;
+            titulo = "RegistrosP"+String.valueOf(patron);
         }
 
 
@@ -42,12 +45,18 @@ public class ArchivoARFF {
 
         if(!existe)
         {
-            CrearEncabezado(filename, dir, Nombres,titulo);
-            CrearCuerpo(filename, dir, Data);
+            CrearEncabezado(filename, dir,titulo,ArrayNombres);
+            CrearCuerpo(filename, dir, Data,ArrayNombres);
         }
 
         else
-            CrearCuerpo(filename, dir, Data);
+            CrearCuerpo(filename, dir, Data, ArrayNombres);
+
+
+
+
+
+
 
 
     }
@@ -55,17 +64,11 @@ public class ArchivoARFF {
 
     // CREAR ENCABEZADO DE ARCHIVO
 
-        public void CrearEncabezado(String FileName, File dir, ArrayList Nombres, String titulo)
+        public void CrearEncabezado(String FileName, File dir, String titulo, ArrayList ArrayNombres)
         {
-            String atributos = "";
+
             String filename = FileName;
             File saveFile = new File(dir, filename);
-            for (int pos = 0; pos < Nombres.size(); pos++) {
-                if(pos == (Nombres.size()-1))
-                    atributos = atributos + Nombres.get(pos).toString();
-                else
-                    atributos = atributos + Nombres.get(pos).toString()+",";
-            }
 
             FileWriter fichero = null;
             PrintWriter wr = null;
@@ -75,20 +78,21 @@ public class ArchivoARFF {
                 fichero = new FileWriter(saveFile,true);
                 wr = new PrintWriter(fichero);
 
-                wr.println("@relation " + titulo);
+                wr.append("@relation " + titulo + "\n");
 
-                for (int i = 0; i < 100; i++) {
-                    wr.println("@attribute bag" + i + " relational");
-                    wr.println("  @attribute x" + i + " real");
-                    wr.println("  @attribute y" + i + " real");
-                    wr.println("  @attribute coord_time" + i + " real");
-                    wr.println("@end bag" + i);
+                for (int i = 1; i <= 100; i++)
+                {
+                    wr.append(" @attribute x"+ i +" real\n");
+                    wr.append(" @attribute y"+ i +" real\n");
+                    wr.append(" @attribute coord_time"+ i +" real\n");
                     wr.flush();
                 }
-                wr.println("@attribute cant_ptos numeric");
-                wr.println("@attribute total_time real");
-                wr.println("@attribute usuario {" + atributos + "}");
-                wr.println("@data");
+
+
+                wr.append("@attribute cant_ptos numeric\n");
+                wr.append("@attribute total_time real\n");
+                wr.append("@attribute usuario {}\n");
+                wr.append("@data\n");
 
                 wr.close();
 
@@ -96,13 +100,13 @@ public class ArchivoARFF {
                Log.d("FICHERO", "ERROR AL ESCRIBIR");
             }
 
-            Log.d("ENCABEZADO","CREADO");
+            Log.d("ENCABEZADO", "CREADO");
         }
 
 
         // ESCRIBIR DATOS
 
-    public void CrearCuerpo(String FileName, File dir, String[] Data)
+    public void CrearCuerpo(String FileName, File dir, String[] Data, ArrayList ArrayNombres)
     {
         String filename = FileName;
         File saveFile = new File(dir, filename);
@@ -119,29 +123,27 @@ public class ArchivoARFF {
                 if(Data[i].compareTo("0") != 0)
                 {
                     Aux = Data[i].split(";");
-                    if (i == 0)
-                        wr.print('"' + Aux[0] + "," + Aux[1] + "," + Aux[2] + "\\"+"n");
-
-                    if(i < 99)
-                        wr.print(Aux[0] + "," + Aux[1] + "," + Aux[2] + "\\"+"n");
-
-                    if (i == 99)
-                        wr.print(Aux[0] + "," + Aux[1] + "," + Aux[2] + '"' + ",");
+                    wr.print(Aux[0] + "," + Aux[1] + "," + Aux[2]+",");
                 }else
                 {
                     if (i < 99)
-                        wr.print(Data[i] +",0,0"+ "\\"+"n");
+                        wr.print(Data[i] +",0,0,");
 
                     if(i == 99)
-                        wr.print(Data[i] + ",0,0"+ '"' + ",");
+                        wr.print(Data[i] + ",0,0,");
                 }
 
 
             }
-            wr.println(Aux[3]+","+Aux[4]+","+Aux[5]);
+            wr.append(Aux[3] + "," + Aux[4] + "," + Aux[5] + "\n");
 
             wr.flush();
             wr.close();
+
+            String LineaAnt = "@attribute usuario";
+            ModificarEncabezado(saveFile,LineaAnt,ArrayNombres);
+
+
 
 
         }catch(IOException e){};
@@ -163,4 +165,77 @@ public class ArchivoARFF {
         return existe;
     }
 
+
+    public static  void ModificarEncabezado(File FficheroAntiguo,String Satigualinea,ArrayList ArrayNombres){
+
+        Random numaleatorio= new Random(3816L);
+
+        String SnombFichNuev=FficheroAntiguo.getParent()+"/auxiliar"+String.valueOf(Math.abs(numaleatorio.nextInt()))+".txt";
+        String atributos = "";
+        String Lineanva = "";
+
+        for (int i = 0; i < ArrayNombres.size(); i++) {
+            if(ArrayNombres.size()==1)
+                atributos = atributos + ArrayNombres.get(i).toString();
+            else
+            {
+                if(i != (ArrayNombres.size() -1))
+                    atributos = atributos + ArrayNombres.get(i).toString()+",";
+                else
+                    atributos = atributos + ArrayNombres.get(i).toString();
+            }
+
+        }
+
+        File FficheroNuevo=new File(SnombFichNuev);
+        try {
+
+            if(FficheroAntiguo.exists()){
+
+                BufferedReader Flee= new BufferedReader(new FileReader(FficheroAntiguo));
+                String Slinea;
+
+                while((Slinea=Flee.readLine())!=null) {
+
+                    if (Slinea.toUpperCase().trim().contains(Satigualinea.toUpperCase().trim())) {
+                        Lineanva = Satigualinea+" {"+atributos+"}";
+                        ReecribirFichero(FficheroNuevo,Lineanva);
+                    }else{
+                        ReecribirFichero(FficheroNuevo,Slinea);
+                    }
+                }
+
+
+                String SnomAntiguo=FficheroAntiguo.getName();
+                FficheroAntiguo.delete();
+
+                FficheroNuevo.renameTo(FficheroAntiguo);
+                /*Cierro el flujo de lectura*/
+                Flee.close();
+            }else{
+                System.out.println("Fichero No Existe");
+            }
+        } catch (Exception ex) {
+            /*Captura un posible error y le imprime en pantalla*/
+            System.out.println(ex.getMessage());
+        }
     }
+
+
+    public static void ReecribirFichero(File Ffichero,String SCadena){
+        try {
+            //Si no Existe el fichero lo crea
+            if(!Ffichero.exists()){
+                Ffichero.createNewFile();
+            }
+
+            BufferedWriter Fescribe=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Ffichero,true), "utf-8"));
+
+            Fescribe.write(SCadena + "\r\n");
+            Fescribe.close();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+}

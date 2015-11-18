@@ -3,6 +3,7 @@ package com.tesisapp.milagrosparedes.tesisapp;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -15,16 +16,19 @@ import java.io.Serializable;
 
 public class NameAlert extends AppCompatActivity implements Serializable {
 
+   private TRegistros mydb;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_name_alert);
+        mydb = new TRegistros(this);
     }
 
     public void InputName (View v)
     {
         AlertDialog.Builder ventana =  new AlertDialog.Builder(this);
         ventana.setMessage("Nombre y Apellido");
+
 
         final EditText ET_nombre = new EditText(this);
         ventana.setView(ET_nombre);
@@ -34,14 +38,19 @@ public class NameAlert extends AppCompatActivity implements Serializable {
             public void onClick(DialogInterface dialog, int which) {
                 String nombre = ET_nombre.getText().toString();
                 if (nombre.length() != 0) {
-                    Toast.makeText(NameAlert.this, "Registrado como: " + nombre, Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(NameAlert.this, Principal.class);
-                    intent.putExtra("parametro", nombre);
-                    startActivity(intent);
-                }
+
+                   Cursor c = mydb.getData("SELECT * FROM Registros WHERE usuario ='"+nombre+"'");
+                    if(c.getCount() == 0)
+                    {
+                        Toast.makeText(NameAlert.this, "Registrado como: " + nombre, Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(NameAlert.this, Principal.class);
+                        intent.putExtra("parametro", nombre);
+                        startActivity(intent);
+                    }else
+                        Toast.makeText(NameAlert.this, "El nombre ingresado ya existe", Toast.LENGTH_SHORT).show();
 
 
-                else
+                } else
                     Toast.makeText(NameAlert.this, "Debe ingresar un nombre", Toast.LENGTH_SHORT).show();
 
             }

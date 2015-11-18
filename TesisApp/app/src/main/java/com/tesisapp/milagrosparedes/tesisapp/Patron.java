@@ -263,8 +263,8 @@ public class Patron {
 
                 if(intento != 1)
                 {
-                    Log.d("DIRECCION BASE",direccion_base + "PATRON: "+patron_actual);
-                    Log.d("DIRECCION " + intento,direccion_sig + "PATRON: "+patron_actual);
+                   // Log.d("DIRECCION BASE",direccion_base + "PATRON: "+patron_actual);
+                   // Log.d("DIRECCION " + intento,direccion_sig + "PATRON: "+patron_actual);
                     if (direccion_sig.compareTo(direccion_base)== 0 && recorrido[3].compareTo(pto_salida_base)== 0)
                         valido = true;
 
@@ -404,10 +404,6 @@ return valido;
         }
 
 
-            for (int i = 0; i < vector_final.length; i++) {
-                Log.d("VECTOR FINAL",vector_final[i]);
-
-        }
         return vector_final;
     }
 
